@@ -1,0 +1,69 @@
+GET http://localhost:8000/api/rapat?page=1&size=10
+
+
+###
+POST http://localhost:8000/api/rapat/9c4c8f31-7958-4f31-acb7-d83ae6b0dd9e/peserta
+Content-Type: application/json
+
+{
+    "peserta": [
+        {
+            "nama": "John Doe",
+            "keterangan": "Manager",
+            "perwakilan": "Sales",
+            "jenis": "Internal"
+        },
+        {
+            "nama": "Jane Smith",
+            "keterangan": "Analyst",
+            "perwakilan": "Marketing",
+            "jenis": "External"
+        }
+    ],
+}
+
+
+###
+POST http://localhost:8000/api/rapat
+Content-Type: application/json
+
+{
+    "nama":"Rapat Biasa",
+    "urgensi":"Biasa"
+}
+
+
+
+###
+POST http://localhost:8000/api/rapat/2
+Content-Type: application/json
+
+{
+    "nama":"Rapat 3",
+    "urgensi":"Luar Biasa",
+    "lokasi":"Rumah Tetangga",
+    "pemapar":"Bos",
+    "_method":"PATCH"
+}
+
+###
+POST http://localhost:8000/api/rapat/2/penanggung_jawab
+Content-Type: application/multipart/form-data
+
+{
+    "nama_personil":"Sumoni Ahun, S.H",
+    "role":"Tamu Undangan",
+}
+
+###
+
+GET http://localhost:8000/api/rapat/2
+
+###
+POST http://localhost:8000/api/rapat/2/arahan_pimpinan
+Content-Type: multipart/form-data
+
+{
+    "arahan":"Turunkan Anggaran DXX",
+    "deadline":"Tamu Undangan ",
+}
