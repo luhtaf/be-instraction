@@ -179,4 +179,11 @@ class RapatController extends Controller
         $rapat->delete();
         return response()->json(['message' =>'Sukses Hapus Rapat'], 202);
     }
+
+    public function getTema()
+    {
+        $temaValues = Rapat::getUniqueTemas(); // Call the static method
+
+        return response()->json(['tema' => $temaValues]);
+    }
 }

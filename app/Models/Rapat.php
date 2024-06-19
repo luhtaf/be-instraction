@@ -7,6 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+
 class Rapat extends Model
 {
     protected $table = 'rapat';
@@ -29,6 +32,17 @@ class Rapat extends Model
         'keterangan',
         'tema'
     ];
+
+    public static function getUniqueTemas()
+    {
+        return self::query()
+            ->select(DB::raw('LOWER(tema) AS lower_tema'))
+            ->distinct()
+            ->pluck('lower_tema')
+            ->map(function ($tema) {
+                return Str::title($tema); // Capitalize each word
+            });
+    }
 
     public function kelengkapan_pre(): HasMany
     {

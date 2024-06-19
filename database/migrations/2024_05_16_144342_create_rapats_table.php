@@ -28,6 +28,7 @@ return new class extends Migration
             $table->string('catatan')->nullable();
             $table->string('keterangan')->nullable();
             $table->string('tema')->nullable();
+            $table->index('tema', 'index_tema');
             $table->timestamps();
         });
     }

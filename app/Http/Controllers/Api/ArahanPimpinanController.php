@@ -136,7 +136,8 @@ class ArahanPimpinanController extends Controller
     {
         try
         {
-            $query = ArahanPimpinan::query();
+            // $query = ArahanPimpinan::query();
+            $query = ArahanPimpinan::with('rapat:id,nama');
 
             // 1. Searching (Filter by Keyword)
             if ($request->has('search')) {
@@ -166,7 +167,16 @@ class ArahanPimpinanController extends Controller
                 ? (in_array($request->input('size'), $allowedPageSizes) ? $request->input('size') : 5)
                 : 5; // Default to 5 if invalid or not provided
 
+            // $arahan_pimpinan = $query->latest()->paginate($perPage);
             $arahan_pimpinan = $query->latest()->paginate($perPage);
+
+        // Optionally transform the results to include the rapat name
+            $arahan_pimpinan->getCollection()->transform(function ($item) {
+                $item->nama_rapat = $item->rapat->nama;
+                unset($item->rapat); // Remove the entire rapat relationship object
+                return $item;
+            });
+
             return $arahan_pimpinan;
 
         }
@@ -215,4 +225,14 @@ class ArahanPimpinanController extends Controller
             ], 500);
         }
     }
+
+    public function get_belum_tindak_lanjut()
+    {
+        $count = ArahanPimpinan::whereNull('status')->count();
+
+        return response()->json([
+            'jumlah' => $count
+        ]);
+    }
+
 }

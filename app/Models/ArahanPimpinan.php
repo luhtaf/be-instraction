@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
 class ArahanPimpinan extends Model
 {
     protected $table = 'arahan_pimpinan';
@@ -21,10 +23,8 @@ class ArahanPimpinan extends Model
         'data_dukung',
         'keterangan'
     ];
-
-
-    public function pelaksana_arahan_pimpinan(): HasMany
+    public function rapat(): BelongsTo
     {
-        return $this->hasMany(PelaksanaArahanPimpinan::class);
+        return $this->belongsTo(Rapat::class, 'rapat_id'); // Define the relationship
     }
 }
