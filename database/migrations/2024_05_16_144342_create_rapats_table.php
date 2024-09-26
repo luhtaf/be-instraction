@@ -15,7 +15,8 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->string('nama');
             $table->string('kategori')->nullable();
-            $table->string('tanggal')->nullable();
+            $table->string('tanggal_mulai')->nullable();
+            $table->string('tanggal_selesai')->nullable();
             $table->string('urgensi')->nullable();
             $table->string('waktu')->nullable();
             $table->string('lokasi')->nullable();
@@ -27,6 +28,7 @@ return new class extends Migration
             $table->string('tautan')->nullable();
             $table->string('catatan')->nullable();
             $table->string('keterangan')->nullable();
+            $table->string('link_rsvp')->nullable();
             $table->string('tema')->nullable();
             $table->index('tema', 'index_tema');
             $table->timestamps();

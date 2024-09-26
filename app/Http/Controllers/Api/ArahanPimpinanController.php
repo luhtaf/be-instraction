@@ -11,15 +11,108 @@ use App\Models\ArahanPimpinan;
 use App\Http\Resources\ArahanPimpinanResource;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\DB;
 
 class ArahanPimpinanController extends Controller
 {
-    public function index(Rapat $rapat)
+    // public function index(Rapat $rapat)
+    // {
+    //     $arahanPimpinan = $rapat->arahan_pimpinan;
+    //     // Return the data as part of the message
+    //     return response()->json(['message' => 'Arahan Pimpinan ditemukan', 'data' => $arahanPimpinan], 200);
+    // }
+    public function index(Rapat $rapat, Request $request)
     {
-        $arahanPimpinan = $rapat->arahan_pimpinan;
-        // Return the data as part of the message
-        return response()->json(['message' => 'Arahan Pimpinan ditemukan', 'data' => $arahanPimpinan], 200);
+        // Apply filtering, sorting, and pagination (optional)
+        $query = $rapat->arahan_pimpinan(); // Get the relationship query builder
 
+        if ($request->has('search')) {
+            $search = $request->input('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('arahan', 'like', "%$search%")
+                  ->orWhereHas('rapat', function ($rapatQuery) use ($search) {
+                      $rapatQuery->where('nama', 'like', "%$search%");
+                  });
+            });
+            $query->orWhere('pelaksana', 'like', "%$search%");
+            $query->orWhere('status', 'like', "%$search%");
+            $query->orWhere('penyelesaian', 'like', "%$search%");
+            $query->orWhere('data_dukung', 'like', "%$search%");
+            $query->orWhere('keterangan', 'like', "%$search%");
+        }
+
+        if ($request->has('nama_rapat')) {
+            $search = $request->input('nama_rapat');
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('rapat', function ($rapatQuery) use ($search) {
+                      $rapatQuery->where('nama', 'like', "%$search%");
+                  });
+            });
+
+
+        }
+
+        if ($request->has('arahan')) {
+            $search = $request->input('arahan');
+            $query->where(function ($q) use ($search) {
+                $q->where('arahan', 'like', "%$search%");
+            });
+        }
+
+        if ($request->has('pelaksana')) {
+            $search = $request->input('pelaksana');
+            $query->where(function ($q) use ($search) {
+                $q->where('pelaksana', 'like', "%$search%");
+            });
+        }
+
+        if ($request->has('deadline')) {
+            $search = $request->input('deadline');
+            $query->where(function ($q) use ($search) {
+                $q->where('deadline', '<', $search);
+            });
+        }
+
+        if ($request->has('status')) {
+            $search = $request->input('status');
+            $query->where('status', $search); // Exact match
+        }
+
+        if ($request->has('penyelesaian')) {
+            $search = $request->input('penyelesaian');
+            $query->where(function ($q) use ($search) {
+                $q->where('penyelesaian', 'like', "%$search%");
+            });
+        }
+
+        if ($request->has('data_dukung')) {
+            $search = $request->input('data_dukung');
+            $query->where(function ($q) use ($search) {
+                $q->where('data_dukung', 'like', "%$search%");
+            });
+        }
+
+        if ($request->has('keterangan')) {
+            $search = $request->input('keterangan');
+            $query->where(function ($q) use ($search) {
+                $q->where('keterangan', 'like', "%$search%");
+            });
+        }
+
+        $allowedPageSizes = [5, 10, 25, 50, 100];
+        $perPage = $request->has('size')
+            ? (in_array($request->input('size'), $allowedPageSizes) ? $request->input('size') : 5)
+            : 5; // Default to 5 if invalid or not provided
+
+        $arahanPimpinan = $query->latest()->paginate($perPage)->toArray();
+
+        // Optionally transform the results to include the rapat name
+        $arahanPimpinan['data'] = collect($arahanPimpinan['data'])->map(function ($item) use ($rapat) {
+            $item['nama_rapat'] = $rapat->nama; // Assuming you have a 'nama' field in your Rapat model
+            return $item;
+        })->all();
+
+        return response()->json($arahanPimpinan, 200);
     }
 
     public function show(Rapat $rapat, ArahanPimpinan $arahanPimpinan)
@@ -140,11 +233,77 @@ class ArahanPimpinanController extends Controller
             $query = ArahanPimpinan::with('rapat:id,nama');
 
             // 1. Searching (Filter by Keyword)
+
             if ($request->has('search')) {
                 $search = $request->input('search');
-                $query->where(function($q) use ($search) {
+                $query->where(function ($q) use ($search) {
                     $q->where('arahan', 'like', "%$search%")
-                      ;
+                      ->orWhereHas('rapat', function ($rapatQuery) use ($search) {
+                          $rapatQuery->where('nama', 'like', "%$search%");
+                      });
+                });
+                $query->orWhere('pelaksana', 'like', "%$search%");
+                $query->orWhere('status', 'like', "%$search%");
+                $query->orWhere('penyelesaian', 'like', "%$search%");
+                $query->orWhere('data_dukung', 'like', "%$search%");
+                $query->orWhere('keterangan', 'like', "%$search%");
+            }
+
+            if ($request->has('nama_rapat')) {
+                $search = $request->input('nama_rapat');
+                $query->where(function ($q) use ($search) {
+                    $q->whereHas('rapat', function ($rapatQuery) use ($search) {
+                          $rapatQuery->where('nama', 'like', "%$search%");
+                      });
+                });
+
+
+            }
+
+            if ($request->has('arahan')) {
+                $search = $request->input('arahan');
+                $query->where(function ($q) use ($search) {
+                    $q->where('arahan', 'like', "%$search%");
+                });
+            }
+
+            if ($request->has('pelaksana')) {
+                $search = $request->input('pelaksana');
+                $query->where(function ($q) use ($search) {
+                    $q->where('pelaksana', 'like', "%$search%");
+                });
+            }
+
+            if ($request->has('deadline')) {
+                $search = $request->input('deadline');
+                $query->where(function ($q) use ($search) {
+                    $q->where('deadline', '<', $search);
+                });
+            }
+
+            if ($request->has('status')) {
+                $search = $request->input('status');
+                $query->where('status', $search); // Exact match
+            }
+
+            if ($request->has('penyelesaian')) {
+                $search = $request->input('penyelesaian');
+                $query->where(function ($q) use ($search) {
+                    $q->where('penyelesaian', 'like', "%$search%");
+                });
+            }
+
+            if ($request->has('data_dukung')) {
+                $search = $request->input('data_dukung');
+                $query->where(function ($q) use ($search) {
+                    $q->where('data_dukung', 'like', "%$search%");
+                });
+            }
+
+            if ($request->has('keterangan')) {
+                $search = $request->input('keterangan');
+                $query->where(function ($q) use ($search) {
+                    $q->where('keterangan', 'like', "%$search%");
                 });
             }
 
@@ -234,5 +393,171 @@ class ArahanPimpinanController extends Controller
             'jumlah' => $count
         ]);
     }
+
+    public function get_top_status_values(Request $request)
+    {
+        try{
+            $validatedData = $request->validate([
+                'sort_by' => 'required|in:total,selesai,gagal,dalam_proses,tidak_ada_tindak_lanjut,tanpa_keterangan,persentase_selesai,pelaksana',
+                'order' => 'required|in:asc,desc',
+            ]);
+
+            $sortBy = $validatedData['sort_by'];
+            $order = $validatedData['order'];
+
+            $query = ArahanPimpinan::select('pelaksana',
+                DB::raw('COUNT(*) as total'),
+                DB::raw('SUM(CASE WHEN status = "Selesai" THEN 1 ELSE 0 END) as selesai'),
+                DB::raw('ROUND(100 * SUM(CASE WHEN status = "Selesai" THEN 1 ELSE 0 END) / COUNT(*), 2) as persentase_selesai'),
+                DB::raw('SUM(CASE WHEN status = "Gagal" THEN 1 ELSE 0 END) as gagal'),
+                DB::raw('SUM(CASE WHEN status = "Dalam Proses" THEN 1 ELSE 0 END) as dalam_proses'),
+                DB::raw('SUM(CASE WHEN status = "Tidak Ada Tindak Lanjut" THEN 1 ELSE 0 END) as tidak_ada_tindak_lanjut'),
+                DB::raw('SUM(CASE WHEN status IS NULL THEN 1 ELSE 0 END) as tanpa_keterangan')
+            )
+                ->groupBy('pelaksana');
+
+            if ($request->has('sort_by') && $request->has('order')) {
+                $query->orderBy($sortBy, $order);
+            } else {
+                $query->orderByDesc('total');
+            }
+
+            if ($request->has('tanggal_mulai') && $request->has('tanggal_selesai')) {
+                $tanggalMulai = $request->input('tanggal_mulai');
+                $tanggalSelesai = $request->input('tanggal_selesai');
+                $query->whereBetween('deadline', [$tanggalMulai, $tanggalSelesai]);
+            }
+
+            $results = $query->limit(5)->get();
+
+            return response()->json($results);
+        }
+        catch (\Exception $e)
+        { // Catch-all for unexpected errors
+            Log::error("Unexpected Error: " . $e->getMessage());
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+
+    }
+
+
+    public function get_top_penyelesaian_values(Request $request)
+    {
+        try{
+            $validatedData = $request->validate([
+                'sort_by' => 'required|in:total,terlambat,tepat_waktu,persentase_tepat_waktu,pelaksana,belum_tl',
+                'order' => 'required|in:asc,desc',
+            ]);
+
+            $sortBy = $validatedData['sort_by'];
+            $order = $validatedData['order'];
+
+            $query = ArahanPimpinan::select('pelaksana',
+                DB::raw('COUNT(*) as total'),
+                DB::raw('SUM(CASE WHEN penyelesaian = "Terlambat" THEN 1 ELSE 0 END) as terlambat'),
+                DB::raw('ROUND(100 * SUM(CASE WHEN penyelesaian = "Tepat Waktu" THEN 1 ELSE 0 END) / COUNT(*), 2) as persentase_tepat_waktu'),
+                DB::raw('SUM(CASE WHEN penyelesaian = "Tepat Waktu" THEN 1 ELSE 0 END) as tepat_waktu'),
+                DB::raw('SUM(CASE WHEN penyelesaian IS NULL THEN 1 ELSE 0 END) as belum_tl')
+            )
+                ->groupBy('pelaksana');
+
+            if ($request->has('sort_by') && $request->has('order')) {
+                $query->orderBy($sortBy, $order);
+            } else {
+                $query->orderByDesc('total');
+            }
+
+            if ($request->has('tanggal_mulai') && $request->has('tanggal_selesai')) {
+                $tanggalMulai = $request->input('tanggal_mulai');
+                $tanggalSelesai = $request->input('tanggal_selesai');
+                $query->whereBetween('deadline', [$tanggalMulai, $tanggalSelesai]);
+            }
+
+            $results = $query->limit(5)->get();
+
+            return response()->json($results);
+        }
+        catch (\Exception $e)
+        { // Catch-all for unexpected errors
+            Log::error("Unexpected Error: " . $e->getMessage());
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+
+    }
+
+
+    public function statistic_arahan(Request $request)
+    {
+        try {
+            $nama = $request->input('nama'); // Get 'nama' from the request body
+
+            $query = ArahanPimpinan::select(
+                'pelaksana',
+                DB::raw('COUNT(*) as total'),
+                DB::raw('SUM(CASE WHEN status = "Selesai" THEN 1 ELSE 0 END) as selesai'),
+                DB::raw('ROUND(100 * SUM(CASE WHEN status = "Selesai" THEN 1 ELSE 0 END) / COUNT(*), 2) as persentase_selesai'),
+                DB::raw('SUM(CASE WHEN status = "Gagal" THEN 1 ELSE 0 END) as gagal'),
+                DB::raw('SUM(CASE WHEN status = "Dalam Proses" THEN 1 ELSE 0 END) as dalam_proses'),
+                DB::raw('SUM(CASE WHEN status = "Tidak Ada Tindak Lanjut" THEN 1 ELSE 0 END) as tidak_ada_tindak_lanjut'),
+                DB::raw('SUM(CASE WHEN status IS NULL THEN 1 ELSE 0 END) as tanpa_keterangan')
+            )
+                ->groupBy('pelaksana');
+
+            // Apply filtering by 'nama' (executor)
+            $query->where('pelaksana', $nama);
+
+            // Optional date filtering (if 'tanggal_mulai' and 'tanggal_selesai' are present)
+            if ($request->has('tanggal_mulai') && $request->has('tanggal_selesai')) {
+                $tanggalMulai = $request->input('tanggal_mulai');
+                $tanggalSelesai = $request->input('tanggal_selesai');
+                $query->whereBetween('deadline', [$tanggalMulai, $tanggalSelesai]);
+            }
+
+            $results = $query->first(); // Fetch the first matching record
+
+
+            return response()->json($results);
+        } catch (\Exception $e) {
+            Log::error("Unexpected Error: " . $e->getMessage());
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    public function statistic_penyelesaian(Request $request)
+    {
+        try {
+            $nama = $request->input('nama'); // Get 'nama' from the request body
+
+            $query = ArahanPimpinan::select(
+                'pelaksana',
+                DB::raw('COUNT(*) as total'),
+                DB::raw('SUM(CASE WHEN penyelesaian = "Terlambat" THEN 1 ELSE 0 END) as terlambat'),
+                DB::raw('ROUND(100 * SUM(CASE WHEN penyelesaian = "Tepat Waktu" THEN 1 ELSE 0 END) / COUNT(*), 2) as persentase_tepat_waktu'),
+                DB::raw('SUM(CASE WHEN penyelesaian = "Tepat Waktu" THEN 1 ELSE 0 END) as tepat_waktu'),
+                DB::raw('SUM(CASE WHEN penyelesaian IS NULL THEN 1 ELSE 0 END) as belum_tl')
+            )
+                ->groupBy('pelaksana');
+
+            // Apply filtering by 'nama' (executor)
+            $query->where('pelaksana', $nama);
+
+            // Optional date filtering (if 'tanggal_mulai' and 'tanggal_selesai' are present)
+            if ($request->has('tanggal_mulai') && $request->has('tanggal_selesai')) {
+                $tanggalMulai = $request->input('tanggal_mulai');
+                $tanggalSelesai = $request->input('tanggal_selesai');
+                $query->whereBetween('deadline', [$tanggalMulai, $tanggalSelesai]);
+            }
+
+            $results = $query->first(); // Fetch the first matching record
+
+
+            return response()->json($results);
+        } catch (\Exception $e) {
+            Log::error("Unexpected Error: " . $e->getMessage());
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+
 
 }

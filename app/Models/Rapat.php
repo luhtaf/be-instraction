@@ -18,7 +18,8 @@ class Rapat extends Model
     protected $fillable = [
         'nama',
         'kategori',
-        'tanggal',
+        'tanggal_mulai',
+        'tanggal_selesai',
         'urgensi',
         'waktu',
         'lokasi',
@@ -30,18 +31,52 @@ class Rapat extends Model
         'tautan',
         'catatan',
         'keterangan',
-        'tema'
+        'tema',
+        'link_rsvp'
     ];
+
+    // public static function getUniqueTemasWithCounts($tanggalMulai=NULL,$tanggalSelesai=NULL)
+    // {
+    //     $query= self::query()
+    //         ->select('tema', DB::raw('count(*) as count'))
+    //         ->groupBy('tema');
+
+    //     if ($tanggalMulai!=NULL && $tanggalSelesai!=NULL) {
+    //         $query->whereBetween('deadline', [$tanggalMulai, $tanggalSelesai]);
+    //     }
+
+    //     $query->limit(5)
+    //         ->get();
+
+    //     return $query;
+    // }
+
+    public static function getUniqueTemasWithCounts($tanggalMulai = null, $tanggalSelesai = null)
+    {
+        $query = self::query()
+            ->select('tema', DB::raw('count(*) as count'))
+            ->groupBy('tema');
+
+        if ($tanggalMulai != null && $tanggalSelesai != null) {
+            $query->whereBetween('deadline', [$tanggalMulai, $tanggalSelesai]);
+        }
+
+        $result = $query->orderByDesc('count') // Order by count in descending order
+            ->limit(5)
+            ->get();
+
+        return $result; // Return the result of the query
+    }
 
     public static function getUniqueTemas()
     {
         return self::query()
-            ->select(DB::raw('LOWER(tema) AS lower_tema'))
+            ->select(DB::raw('tema AS lower_tema'))
             ->distinct()
-            ->pluck('lower_tema')
-            ->map(function ($tema) {
-                return Str::title($tema); // Capitalize each word
-            });
+            ->pluck('lower_tema');
+            // ->map(function ($tema) {
+            //     return Str::title($tema); // Capitalize each word
+            // });
     }
 
     public function kelengkapan_pre(): HasMany
@@ -67,5 +102,19 @@ class Rapat extends Model
     public function arahan_pimpinan(): HasMany
     {
         return $this->hasMany(ArahanPimpinan::class);
+    }
+
+    public function getJumlahArahanAttribute()
+    {
+        return $this->arahan_pimpinan->count();
+    }
+
+    public function getAllDataAttribute()
+    {
+        return array_merge($this->attributes, [
+            'arahan_pimpinan' => $this->arahan_pimpinan->toArray(),
+            'jumlah_arahan' => $this->jumlah_arahan,
+
+        ]);
     }
 }

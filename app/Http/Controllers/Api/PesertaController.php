@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 use App\Models\Rapat;
 use App\Models\Peserta;
@@ -15,6 +16,7 @@ use App\Http\Resources\PesertaResource;
 
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Validation\ValidationException;
+
 
 class PesertaController extends Controller
 {
@@ -213,10 +215,6 @@ class PesertaController extends Controller
     public function destroy_all(Rapat $rapat)
     {
         try {
-            // 1. Authorization Check (Optional but recommended)
-            // $this->authorize('deletePeserta', $rapat); // Use a policy for fine-grained authorization
-
-            // 2. Delete Peserta Records
             $deletedCount = Peserta::where('rapat_id', $rapat->id)->delete();
 
             // 3. Logging (Optional)
@@ -235,5 +233,90 @@ class PesertaController extends Controller
                 'error' => 'Failed to delete peserta from rapat.'
             ], 500);
         }
+    }
+
+public function get_top_undangan_values(Request $request)
+    {
+        try{
+            $validatedData = $request->validate([
+                'sort_by' => 'required|in:nama,total,hadir,persentase_hadir',
+                'order' => 'required|in:asc,desc',
+            ]);
+
+            $sortBy = $validatedData['sort_by'];
+            $order = $validatedData['order'];
+
+
+            $query = Peserta::select('peserta.nama',
+                DB::raw('COUNT(*) as total'),
+                DB::raw('SUM(CASE WHEN peserta.keterangan LIKE "Hadir%" THEN 1 ELSE 0 END) as hadir'),
+                DB::raw('ROUND(100 * SUM(CASE WHEN peserta.keterangan LIKE "Hadir%" THEN 1 ELSE 0 END) / COUNT(*), 2) as persentase_hadir'),
+            )
+            ->join('rapat', 'peserta.rapat_id', '=', 'rapat.id')
+            ->groupBy('peserta.nama');
+
+            if ($request->has('sort_by') && $request->has('order')) {
+                $query->orderBy($sortBy, $order);
+            } else {
+                $query->orderByDesc('total');
+            }
+
+            if ($request->has('tanggal_mulai') && $request->has('tanggal_selesai')) {
+                $tanggalMulai = $request->input('tanggal_mulai');
+                $tanggalSelesai = $request->input('tanggal_selesai');
+                $query->whereBetween('rapat.tanggal_mulai', [$tanggalMulai, $tanggalSelesai]);
+            }
+            elseif ($request->has('tanggal_mulai')) {
+                $tanggalMulai=$request->input('tanggal_mulai');
+                $query->whereDate('rapat.tanggal_mulai', '>=', $tanggalMulai);
+            }
+            elseif ($request->has('tanggal_selesai')) {
+                $tanggalSelesai=$request->input('tanggal_selesai');
+                $query->whereDate('rapat.tanggal_selesai', '<=', $tanggalSelesai);
+            }
+
+            $results = $query->limit(5)->get();
+
+            return response()->json($results);
+        }
+        catch (\Exception $e)
+        { // Catch-all for unexpected errors
+            Log::error("Unexpected Error: " . $e->getMessage());
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+
+    }
+
+    public function statistic_peserta(Request $request)
+    {
+        try{
+            $nama = $request->input('nama'); // Get the 'nama' from the request body
+
+            $query = Peserta::where('peserta.nama', $nama)
+                ->select('peserta.nama',
+                    DB::raw('count(*) as count'),
+                    DB::raw('SUM(CASE WHEN peserta.keterangan LIKE "Hadir%" THEN 1 ELSE 0 END) as hadir'),
+                    DB::raw('SUM(CASE WHEN peserta.keterangan = "Diwakilkan" THEN 1 ELSE 0 END) as diwakilkan'),
+                    DB::raw('SUM(CASE WHEN peserta.keterangan = "Tidak Hadir" THEN 1 ELSE 0 END) as tidak_hadir'),
+                    )
+                ->join('rapat', 'peserta.rapat_id', '=', 'rapat.id')
+                ->groupBy('nama');
+
+
+                            // Optional date filtering (if 'tanggal_mulai' and 'tanggal_selesai' are present)
+            if ($request->has('tanggal_mulai') && $request->has('tanggal_selesai')) {
+                $tanggalMulai = $request->input('tanggal_mulai');
+                $tanggalSelesai = $request->input('tanggal_selesai');
+                $query->whereBetween('rapat.tanggal_mulai', [$tanggalMulai, $tanggalSelesai]);
+            }
+            $results=$query->first();
+            return response()->json($results);
+        }
+        catch (\Exception $e)
+        { // Catch-all for unexpected errors
+            Log::error("Unexpected Error: " . $e->getMessage());
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+
     }
 }
