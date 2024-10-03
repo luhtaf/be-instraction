@@ -67,3 +67,13 @@ Content-Type: multipart/form-data
     "arahan":"Turunkan Anggaran DXX",
     "deadline":"Tamu Undangan ",
 }
+
+
+###
+POST http://localhost:8000/api/login
+Content-Type: application/json
+
+{
+    "email":"admindsp@bssn.go.id",
+    "password":"123456"
+}
