@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\RapatController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\NotifController;
 use App\Http\Controllers\UnitController;
+use App\Http\Controllers\KaryawanController;
 
 Route::post('register',[AuthController::class,'register']);
 Route::post('login', [AuthController::class,'login']);
@@ -51,3 +52,6 @@ Route::middleware('AUTH')->group(function () {
     Route::get('units', [UnitController::class, 'getAllUnits']);
     Route::patch('/rapat/{rapat}/laporan_arahan_pimpinan/{arahan_pimpinan}', [ArahanPimpinanController::class, 'updateUnitkerja']);
 });
+// Route::get('/karyawan', [KaryawanController::class],'__invoke');
+Route::get('/karyawan', [KaryawanController::class,'__invoke']);
+

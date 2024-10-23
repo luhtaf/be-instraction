@@ -84,11 +84,11 @@ POST http://localhost:8000/api/register
 Content-Type: application/json
 
 {
-    "name":"Ahmad XXXX",
+    "name":"Deputi BCD",
     "unit_kerja":"DIT OPSKAMSIBER (D21)",
-    "email":"ahmad@bssn.go.id",
+    "email":"d21@bssn.go.id",
     "password":"123456",
-    "role": "staff"
+    "role": "direktur"
 }
 
 
