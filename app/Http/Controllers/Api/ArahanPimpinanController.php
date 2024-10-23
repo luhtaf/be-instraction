@@ -164,12 +164,22 @@ class ArahanPimpinanController extends Controller
     public function update(ArahanPimpinanRequest $request, Rapat $rapat, ArahanPimpinan $arahanPimpinan)
     {
         try {
+            // Memeriksa apakah arahanPimpinan terkait dengan rapat yang dimaksud
             if ($arahanPimpinan->rapat_id !== $rapat->id) {
                 return response()->json(['error' => 'Arahan Pimpinan tidak terkait dengan Rapat ini'], 404);
             }
 
-            $data=$request->validated();
+            // Validasi data dari request
+            $data = $request->validated();
 
+            // Cek kondisi status dan batas_konfirmasi
+            if ($data['status']=="Dalam Proses" && !empty($data['batas_konfirmasi'])) {
+                // Mengubah status menjadi 'Menunggu Konfirmasi Perbaikan' jika kondisi terpenuhi
+                $data['status'] = 'Menunggu Konfirmasi Perbaikan';
+                $data['revisi']=$arahanPimpinan->revisi+1;
+            }
+
+            // Update arahanPimpinan dengan data yang telah disesuaikan
             $arahanPimpinan->update($data);
 
             return response()->json(['message' => 'Sukses Update Arahan Pimpinan', 'data' => new ArahanPimpinanResource($arahanPimpinan)], 200);
@@ -182,9 +192,10 @@ class ArahanPimpinanController extends Controller
             return response()->json(['errors' => $e->errors()], 422);
         } catch (\Exception $e) {
             Log::error('Error updating Arahan Pimpinan:', ['error' => $e->getMessage()]);
-            return response()->json(['error' => 'Gagal Update Arahan Pimpinan', 'detail'=>$e->getMessage()], 500);
+            return response()->json(['error' => 'Gagal Update Arahan Pimpinan', 'detail' => $e->getMessage()], 500);
         }
     }
+
 
     public function destroy(Rapat $rapat, ArahanPimpinan $arahanPimpinan)
     {
@@ -302,10 +313,10 @@ class ArahanPimpinanController extends Controller
                 $query->where('pelaksana',$user->unit_kerja);
             }
             else if($user->role=="deputi"){
-                $childUnits = Unit::where('parent', $user->name)->pluck('nama');
+                $childUnits = Unit::where('parent', $user->unit_kerja)->pluck('nama');
 
                 // Tambahkan "Deputi 2" ke dalam daftar pelaksana
-                $pelaksanaList = $childUnits->push($user->name);
+                $pelaksanaList = $childUnits->push($user->unit_kerja);
                 $query->whereIn('pelaksana', $pelaksanaList);
             }
 
@@ -562,7 +573,7 @@ class ArahanPimpinanController extends Controller
             }
 
             $data=$request->validated();
-            if (empty($arahanPimpinan->status)) {
+            if (empty($arahanPimpinan->status) || $arahanPimpinan->status="Menunggu Konfirmasi Perbaikan") {
                 $data['status'] = 'Dalam Proses';
             }
             $arahanPimpinan->update($data);

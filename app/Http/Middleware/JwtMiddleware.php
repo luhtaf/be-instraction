@@ -7,6 +7,32 @@ use JWTAuth;
 use Exception;
 use Illuminate\Support\Facades\Auth;
 
+function base64UrlDecode($input) {
+    $remainder = strlen($input) % 4;
+    if ($remainder) {
+        $addlen = 4 - $remainder;
+        $input .= str_repeat('=', $addlen);
+    }
+    return base64_decode(strtr($input, '-_', '+/'));
+}
+
+function decodeJwtWithoutVerification($jwt) {
+    $parts = explode('.', $jwt);
+    if (count($parts) !== 3) {
+        throw new \InvalidArgumentException('Invalid JWT token structure.');
+    }
+
+    // Decode header and payload
+    $header = json_decode(base64UrlDecode($parts[0]), true);
+    $payload = json_decode(base64UrlDecode($parts[1]), true);
+
+    return [
+        'header' => $header,
+        'payload' => $payload
+    ];
+}
+
+
 class JwtMiddleware
 {
 
@@ -20,6 +46,7 @@ class JwtMiddleware
     public function handle($request, Closure $next, ...$role)
     {
         try {
+            // $decoded = decodeJwtWithoutVerification($token)['payload'];
             $user = JWTAuth::parseToken()->authenticate();
             if (!empty($role)) {
                 $user->roles=$this->parseRole($user);

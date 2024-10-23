@@ -9,7 +9,9 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\NotifController;
 use App\Http\Controllers\UnitController;
 use App\Http\Controllers\KaryawanController;
+use App\Http\Controllers\LoginDwsController;
 
+Route::post('login-dws', [LoginDwsController::class, 'loginDws']);
 Route::post('register',[AuthController::class,'register']);
 Route::post('login', [AuthController::class,'login']);
 Route::get('send', [NotifController::class,'send']);
