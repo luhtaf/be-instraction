@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use Closure;
 use JWTAuth;
 use Exception;
+use Illuminate\Support\Facades\Auth;
 
 class JwtMiddleware
 {
@@ -23,21 +24,22 @@ class JwtMiddleware
             if (!empty($role)) {
                 $user->roles=$this->parseRole($user);
                 if (empty(array_intersect($role, $user->roles))) {
-                    return response()->json(['status' => 'forbidden resource']);
+                    return response()->json(['status' => 'forbidden resource'],403);
                 }
             }
+            Auth::login($user); // Log the user in
         } catch (Exception $e) {
             if ($e instanceof \Tymon\JWTAuth\Exceptions\TokenInvalidException)
             {
-                return response()->json(['status' => 'Token is Invalid']);
+                return response()->json(['status' => 'Token is Invalid'],403);
             }
             else if ($e instanceof \Tymon\JWTAuth\Exceptions\TokenExpiredException)
             {
-                return response()->json(['status' => 'Token is Expired']);
+                return response()->json(['status' => 'Token is Expired'],403);
             }
             else
             {
-                return response()->json(['status' => 'Authorization Token not found']);
+                return response()->json(['status' => 'Authorization Token not found'],403);
             }
         }
         return $next($request);

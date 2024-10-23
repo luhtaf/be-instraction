@@ -19,6 +19,8 @@ return new class extends Migration
             $table->foreignUuid('rapat_id')->references('id')->on('rapat')->onDelete('cascade')->constrained();
             $table->string('arahan');
             $table->string('deadline')->nullable();
+            $table->integer('revisi')->default(0);
+            $table->string('batas_konfirmasi')->nullable();
             $table->string('pelaksana')->nullable();
             $table->string('status')->nullable();
             $table->string('penyelesaian')->nullable();

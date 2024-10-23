@@ -21,7 +21,9 @@ class ArahanPimpinan extends Model
         'status',
         'penyelesaian',
         'data_dukung',
-        'keterangan'
+        'keterangan',
+        'revisi',
+        'batas_konfirmasi'
     ];
     public function rapat(): BelongsTo
     {

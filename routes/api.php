@@ -7,7 +7,7 @@ use App\Http\Controllers\Api\ArahanPimpinanController;
 use App\Http\Controllers\Api\RapatController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\NotifController;
-
+use App\Http\Controllers\UnitController;
 
 Route::post('register',[AuthController::class,'register']);
 Route::post('login', [AuthController::class,'login']);
@@ -19,8 +19,7 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 
-// Route::middleware('AUTH:admin')->group(function () {
-    Route::get('arahan_pimpinan', [ArahanPimpinanController::class,'all_arahan']);
+Route::middleware('AUTH:admin')->group(function () {
     Route::get('total_arahan_belum_tl', [ArahanPimpinanController::class,'get_belum_tindak_lanjut']);
     Route::get('top5_arahan', [ArahanPimpinanController::class,'get_top_status_values']);
     Route::get('top5_penyelesaian', [ArahanPimpinanController::class,'get_top_penyelesaian_values']);
@@ -44,5 +43,11 @@ Route::get('/user', function (Request $request) {
         Route::delete('/peserta/{peserta}', [PesertaController::class, 'destroy']);
     });
 
-// });
+});
 
+
+Route::middleware('AUTH')->group(function () {
+    Route::get('arahan_pimpinan', [ArahanPimpinanController::class,'all_arahan']);
+    Route::get('units', [UnitController::class, 'getAllUnits']);
+    Route::patch('/rapat/{rapat}/laporan_arahan_pimpinan/{arahan_pimpinan}', [ArahanPimpinanController::class, 'updateUnitkerja']);
+});

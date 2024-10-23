@@ -77,3 +77,22 @@ Content-Type: application/json
     "email":"admindsp@bssn.go.id",
     "password":"123456"
 }
+
+
+###
+POST http://localhost:8000/api/register
+Content-Type: application/json
+
+{
+    "name":"Ahmad XXXX",
+    "unit_kerja":"DIT OPSKAMSIBER (D21)",
+    "email":"ahmad@bssn.go.id",
+    "password":"123456",
+    "role": "staff"
+}
+
+
+###
+GET http://localhost:8000/api/tes
+Content-Type: application/json
+Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vbG9jYWxob3N0OjgwMDAvYXBpL2xvZ2luIiwiaWF0IjoxNzI5NTg3MjExLCJleHAiOjE3Mjk1OTA4MTEsIm5iZiI6MTcyOTU4NzIxMSwianRpIjoiOUE0c1VaUWpwTnMwUjVXOCIsInN1YiI6IjUiLCJwcnYiOiIyM2JkNWM4OTQ5ZjYwMGFkYjM5ZTcwMWM0MDA4NzJkYjdhNTk3NmY3IiwiZW1haWwiOiJhaG1hZEBic3NuLmdvLmlkIiwibmFtZSI6IkFobWFkIFhYWFgiLCJyb2xlIjpbInN0YWZmIl0sIjAiOiJ1bml0X2tlcmphIn0.EEO4Vyp0WUJ-vKiH9qLNSY7Oz-tvsw7q9JTjfuMwNP0

@@ -7,11 +7,15 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 use App\Models\Rapat;
+use App\Models\Unit;
 use App\Models\ArahanPimpinan;
 use App\Http\Resources\ArahanPimpinanResource;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
+use App\Http\Requests\ArahanPimpinanRequest;
+use App\Http\Requests\LaporanArahanPimpinanRequest;
 
 class ArahanPimpinanController extends Controller
 {
@@ -21,6 +25,7 @@ class ArahanPimpinanController extends Controller
     //     // Return the data as part of the message
     //     return response()->json(['message' => 'Arahan Pimpinan ditemukan', 'data' => $arahanPimpinan], 200);
     // }
+
     public function index(Rapat $rapat, Request $request)
     {
         // Apply filtering, sorting, and pagination (optional)
@@ -134,28 +139,15 @@ class ArahanPimpinanController extends Controller
         }
     }
 
-    public function store(Request $request, Rapat $rapat)
+    public function store(ArahanPimpinanRequest $request, Rapat $rapat)
     {
         try {
             if (!$rapat) {
                 return response()->json(['message' => 'Rapat not found'], 404);
             }
 
-            $validator = Validator::make($request->all(), [
-                'arahan' => 'required|string',
-                'deadline' => 'nullable|string',
-                'pelaksana' => 'nullable|string',
-                'status' => 'nullable|string',
-                'penyelesaian' => 'nullable|string',
-                'data_dukung' => 'nullable|string',
-                'keterangan' => 'nullable|string',
-            ]);
-
-            if ($validator->fails()) {
-                throw new ValidationException($validator);
-            }
-
-            $arahanPimpinan = new ArahanPimpinan($request->all());
+            $data=$request->validated();
+            $arahanPimpinan = new ArahanPimpinan($data);
             $rapat->arahan_pimpinan()->save($arahanPimpinan);
 
             return response()->json(['message' => 'Sukses Assign Arahan Pimpinan Rapat', 'data' => new ArahanPimpinanResource($arahanPimpinan)], 201);
@@ -169,28 +161,16 @@ class ArahanPimpinanController extends Controller
         }
     }
 
-    public function update(Request $request, Rapat $rapat, ArahanPimpinan $arahanPimpinan)
+    public function update(ArahanPimpinanRequest $request, Rapat $rapat, ArahanPimpinan $arahanPimpinan)
     {
         try {
             if ($arahanPimpinan->rapat_id !== $rapat->id) {
                 return response()->json(['error' => 'Arahan Pimpinan tidak terkait dengan Rapat ini'], 404);
             }
 
-            $validator = Validator::make($request->all(), [
-                'arahan' => 'required|string',
-                'deadline' => 'nullable|string',
-                'pelaksana' => 'nullable|string',
-                'status' => 'nullable|string',
-                'penyelesaian' => 'nullable|string',
-                'data_dukung' => 'nullable|string',
-                'keterangan' => 'nullable|string'
-            ]);
+            $data=$request->validated();
 
-            if ($validator->fails()) {
-                throw new ValidationException($validator);
-            }
-
-            $arahanPimpinan->update($request->all());
+            $arahanPimpinan->update($data);
 
             return response()->json(['message' => 'Sukses Update Arahan Pimpinan', 'data' => new ArahanPimpinanResource($arahanPimpinan)], 200);
 
@@ -229,6 +209,7 @@ class ArahanPimpinanController extends Controller
     {
         try
         {
+            $user=Auth::user();
             // $query = ArahanPimpinan::query();
             $query = ArahanPimpinan::with('rapat:id,nama');
 
@@ -256,8 +237,6 @@ class ArahanPimpinanController extends Controller
                           $rapatQuery->where('nama', 'like', "%$search%");
                       });
                 });
-
-
             }
 
             if ($request->has('arahan')) {
@@ -317,6 +296,17 @@ class ArahanPimpinanController extends Controller
                 if (in_array($sortBy, $allowedSortFields)) {
                     $query->orderBy($sortBy, $order);
                 }
+            }
+
+            if ($user->role=="staff" || $user->role=="direktur") {
+                $query->where('pelaksana',$user->unit_kerja);
+            }
+            else if($user->role=="deputi"){
+                $childUnits = Unit::where('parent', $user->name)->pluck('nama');
+
+                // Tambahkan "Deputi 2" ke dalam daftar pelaksana
+                $pelaksanaList = $childUnits->push($user->name);
+                $query->whereIn('pelaksana', $pelaksanaList);
             }
 
             // 3. Pagination (Still using Laravel's built-in pagination)
@@ -558,6 +548,38 @@ class ArahanPimpinanController extends Controller
         }
     }
 
+    public function updateUnitkerja(LaporanArahanPimpinanRequest $request, Rapat $rapat, ArahanPimpinan $arahanPimpinan)
+    {
+        try {
+            $user=Auth::user();
+            if ($arahanPimpinan->rapat_id !== $rapat->id) {
+                return response()->json(['error' => 'Arahan Pimpinan tidak terkait dengan Rapat ini'], 404);
+            }
+            if (in_array($user->role, ['staff', 'direktur'])) {
+                if ($arahanPimpinan->pelaksana !== $user->unit_kerja) {
+                    return response()->json(['error' => 'Anda tidak memiliki izin untuk memperbarui Arahan Pimpinan ini'], 403);
+                }
+            }
+
+            $data=$request->validated();
+            if (empty($arahanPimpinan->status)) {
+                $data['status'] = 'Dalam Proses';
+            }
+            $arahanPimpinan->update($data);
+
+            return response()->json(['message' => 'Sukses Update Arahan Pimpinan', 'data' => new ArahanPimpinanResource($arahanPimpinan)], 200);
+
+        } catch (ModelNotFoundException $e) {
+            Log::warning('Arahan Pimpinan not found for updating:', ['rapat_id' => $rapat->id]);
+            return response()->json(['error' => 'Arahan Pimpinan tidak ditemukan'], 404);
+        } catch (ValidationException $e) {
+            Log::info('Validation error:', $e->errors());
+            return response()->json(['errors' => $e->errors()], 422);
+        } catch (\Exception $e) {
+            Log::error('Error updating Arahan Pimpinan:', ['error' => $e->getMessage()]);
+            return response()->json(['error' => 'Gagal Update Arahan Pimpinan', 'detail'=>$e->getMessage()], 500);
+        }
+    }
 
 
 }
