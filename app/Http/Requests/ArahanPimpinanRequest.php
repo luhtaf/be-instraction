@@ -29,7 +29,7 @@ class ArahanPimpinanRequest extends FormRequest
             'penyelesaian' => 'nullable|string',
             'data_dukung' => 'nullable|string',
             'keterangan' => 'nullable|string',
-            'batas_konfirmasi' => 'nullable|string',
+            'batas_konfirmasi' => 'nullable|date',
         ];
     }
 }
