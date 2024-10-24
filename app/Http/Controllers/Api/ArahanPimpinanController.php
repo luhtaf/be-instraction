@@ -173,7 +173,7 @@ class ArahanPimpinanController extends Controller
             $data = $request->validated();
 
             // Cek kondisi status dan batas_konfirmasi
-            if ($data['status']=="Dalam Proses" && !empty($data['batas_konfirmasi'])) {
+            if ($data['status']=="Dalam Proses" && $data['batas_konfirmasi']!=$arahanPimpinan->batas_konfirmasi) {
                 // Mengubah status menjadi 'Menunggu Konfirmasi Perbaikan' jika kondisi terpenuhi
                 $data['status'] = 'Menunggu Konfirmasi Perbaikan';
                 $data['revisi']=$arahanPimpinan->revisi+1;

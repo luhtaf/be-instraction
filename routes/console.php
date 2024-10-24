@@ -8,4 +8,4 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote')->hourly();
 
 
-Schedule::command('app:cek-batas-konfirmasi-arahan')->everySecond();
+Schedule::command('app:cek-batas-konfirmasi-arahan')->hourly();
