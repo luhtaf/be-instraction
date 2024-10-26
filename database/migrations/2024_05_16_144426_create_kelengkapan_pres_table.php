@@ -15,7 +15,8 @@ return new class extends Migration
             // $table->id();
             // $table->unsignedBigInteger('rapat_id'); // Foreign key
             $table->uuid('id')->primary();
-            $table->foreignUuid('rapat_id')->references('id')->on('rapat')->onDelete('cascade')->constrained();
+            // $table->foreignUuid('rapat_id')->references('id')->on('rapat')->onDelete('cascade')->constrained();
+            $table->uuid('rapat_id');
             $table->string('poin');
             $table->string('keterangan');
             $table->timestamps();

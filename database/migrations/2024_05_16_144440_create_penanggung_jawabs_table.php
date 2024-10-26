@@ -14,7 +14,8 @@ return new class extends Migration
         Schema::create('penanggung_jawab', function (Blueprint $table) {
             // $table->id();
             $table->uuid('id')->primary();
-            $table->foreignUuid('rapat_id')->references('id')->on('rapat')->onDelete('cascade')->constrained();
+            // $table->foreignUuid('rapat_id')->references('id')->on('rapat')->onDelete('cascade')->constrained();
+            $table->uuid('rapat_id');
             // $table->foreign('rapat_id')->references('id')->on('rapat')->onDelete('cascade');
             $table->string('nama_personil');
             $table->string('role');

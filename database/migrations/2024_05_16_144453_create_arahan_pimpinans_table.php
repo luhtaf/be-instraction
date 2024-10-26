@@ -16,7 +16,8 @@ return new class extends Migration
             // $table->unsignedBigInteger('rapat_id'); // Foreign key
             // $table->foreign('rapat_id')->references('id')->on('rapat')->onDelete('cascade');
             $table->uuid('id')->primary();
-            $table->foreignUuid('rapat_id')->references('id')->on('rapat')->onDelete('cascade')->constrained();
+            $table->uuid('rapat_id');
+            // $table->foreignUuid('rapat_id')->references('id')->on('rapat')->onDelete('cascade')->constrained();
             $table->string('arahan');
             $table->string('deadline')->nullable();
             $table->integer('revisi')->default(0);

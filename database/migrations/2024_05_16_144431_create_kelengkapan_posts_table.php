@@ -14,7 +14,8 @@ return new class extends Migration
         Schema::create('kelengkapan_post', function (Blueprint $table) {
             // $table->id();
             $table->uuid('id')->primary();
-            $table->foreignUuid('rapat_id')->references('id')->on('rapat')->onDelete('cascade')->constrained();
+            $table->uuid('rapat_id');
+            // $table->foreignUuid('rapat_id')->references('id')->on('rapat')->onDelete('cascade')->constrained();
             // $table->unsignedBigInteger('rapat_id'); // Foreign key
             // $table->foreign('rapat_id')->references('id')->on('rapat')->onDelete('cascade');
             $table->string('undangan')->nullable();
