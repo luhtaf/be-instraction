@@ -36,7 +36,7 @@ class CekBatasKonfirmasiArahan extends Command
         ->where('batas_konfirmasi', '<', $today)
         ->get();
         foreach ($expiredArahan as $arahan) {
-            $arahan->status = 'Tidak Ada Tindak Lanjut dari Unit Kerja';
+            $arahan->status = 'Belum Ada Tindak Lanjut dari Unit Kerja';
             $arahan->save();
             $message = "Arahan dengan arahan {$arahan->arahan} dan id {$arahan->id} sudah melewati Batas Waktu, dan belum ada tindak lanjut. {$arahan->batas_konfirmasi}";
             $this->info($message); // Output to console
