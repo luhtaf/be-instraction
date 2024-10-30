@@ -36,7 +36,22 @@ Route::middleware('AUTH:admin')->group(function () {
     Route::resource('/rapat', RapatController::class)->only(['show','index','store', 'update', 'destroy']);
     Route::prefix('rapat/{rapat}')->group(function () {
         Route::apiResource('penanggung_jawab', App\Http\Controllers\Api\PenanggungJawabController::class)->only(['index','show','store', 'update', 'destroy']);
-        Route::apiResource('arahan_pimpinan', ArahanPimpinanController::class)->only(['index','show','store', 'update', 'destroy']);
+        // Route::apiResource('arahan_pimpinan', ArahanPimpinanController::class)->only(['index','show','store', 'update', 'destroy']);
+
+        Route::middleware('dec')->group(function(){
+            Route::get('arahan_pimpinan', [ArahanPimpinanController::class,'index']);
+            Route::get('arahan_pimpinan/{arahan_pimpinan}', [ArahanPimpinanController::class,'show']);
+        });
+
+        Route::middleware('enc')->group(function(){
+            Route::post('arahan_pimpinan', [ArahanPimpinanController::class,'store']);
+            Route::put('arahan_pimpinan/{arahan_pimpinan}', [ArahanPimpinanController::class,'update']);
+        });
+
+
+        Route::delete('arahan_pimpinan/{arahan_pimpinan}', [ArahanPimpinanController::class,'destroy']);
+
+
         Route::apiResource('kelengkapan_post', App\Http\Controllers\Api\KelengkapanPostController::class)->only(['index','show','store', 'update', 'destroy']);
         Route::get('/peserta', [PesertaController::class, 'index']);
         Route::post('/peserta', [PesertaController::class, 'store']);

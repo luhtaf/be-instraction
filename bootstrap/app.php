@@ -19,6 +19,8 @@ return Application::configure(basePath: dirname(__DIR__))
         // $middleware->append(EnsureTokenIsValid::class);
         $middleware->alias([
             'AUTH' => \App\Http\Middleware\JwtMiddleware::class,
+            'enc' => \App\Http\Middleware\EncryptMiddleware::class,
+            'dec' => \App\Http\Middleware\DecryptMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
