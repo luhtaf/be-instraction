@@ -60,9 +60,9 @@ class LoginDwsController extends Controller
             if (!$user) {
                 $role = 'staff'; // Default role
                 if (str_contains($karyawan->jabatan, 'Kepala Biro') || str_contains($karyawan->jabatan, 'Direktur')) {
-                    $role = 'direktur';
+                    $role = 'eselon 2';
                 } elseif (str_contains($karyawan->jabatan, 'Deputi')) {
-                    $role = 'deputi';
+                    $role = 'eselon 1';
                 } elseif ($karyawan->unit_kerja === 'Bagian Dukungan Strategis dan Tata Usaha Pimpinan, Biro Hukum dan Komunikasi Publik, Sekretariat Utama') {
                     $role = 'admin';
                 }

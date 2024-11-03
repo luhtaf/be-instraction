@@ -309,10 +309,10 @@ class ArahanPimpinanController extends Controller
                 }
             }
 
-            if ($user->role=="staff" || $user->role=="direktur") {
+            if ($user->role=="staff" || $user->role=="eselon 2") {
                 $query->where('pelaksana',$user->unit_kerja);
             }
-            else if($user->role=="deputi"){
+            else if($user->role=="eselon 1"){
                 $childUnits = Unit::where('parent', $user->unit_kerja)->pluck('nama');
 
                 // Tambahkan "Deputi 2" ke dalam daftar pelaksana
@@ -566,7 +566,7 @@ class ArahanPimpinanController extends Controller
             if ($arahanPimpinan->rapat_id !== $rapat->id) {
                 return response()->json(['error' => 'Arahan Pimpinan tidak terkait dengan Rapat ini'], 404);
             }
-            if (in_array($user->role, ['staff', 'direktur'])) {
+            if (in_array($user->role, ['staff', 'eselon 2'])) {
                 if ($arahanPimpinan->pelaksana !== $user->unit_kerja) {
                     return response()->json(['error' => 'Anda tidak memiliki izin untuk memperbarui Arahan Pimpinan ini'], 403);
                 }
